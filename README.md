@@ -46,3 +46,7 @@ cd docker/scripts/remote
 | 美国 M2 | FRED `M2SL`（美联储官方序列） | 1959-01 起 |
 | 黄金 | LBMA 伦敦金定盘价（官网 JSON） | 1968-04-01 起 |
 | 黄金（1968 年前） | 美国官方金价常量 $20.67 / $35.00 | 1919-09 ~ 1968-03 |
+
+## LiveMore AmazingData 副本
+
+独立项目位于 `LiveMoreAmazing/`，保留原 `LiveMore/`。使用银河 AmazingData 历史日线和共用 M2 镜像的独立 Compose 服务进行远端采集、离线回测；完整运行步骤见 [LiveMoreAmazing/README.md](LiveMoreAmazing/README.md)。

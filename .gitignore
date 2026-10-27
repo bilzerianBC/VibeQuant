@@ -3,6 +3,8 @@
 .env.*
 !.env.example
 !.env.remote.example
+!.env.amazing.example
+*.whl
 secrets/
 *.pem
 *.key

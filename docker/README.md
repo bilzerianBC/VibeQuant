@@ -1,6 +1,6 @@
 # VibeQuant 统一 Docker 部署
 
-把 **M2DivGold**（M2/黄金数据抓取 + 图表）和 **VibeQuantFront**（前端门户）放进**一个镜像 + 一份 compose**，部署到远端宿主机上跑。
+把 **M2DivGold**（M2/黄金数据抓取 + 图表）、**LiveMoreAmazing**（银河行情与回测）和 **VibeQuantFront**（前端门户）放进**一个镜像 + 一份 compose**，部署到远端宿主机上跑。
 
 分工约定：**Mac 只做编辑和编排**（写代码、Git、rsync 同步、SSH）；依赖安装、数据抓取、镜像构建全部在远端 Docker 内执行。
 
@@ -41,8 +41,8 @@ docker/
 | 文件 | 作用 |
 |---|---|
 | `Dockerfile` | 基于 `python:3.12-slim`（带 digest 固定），建非 root 用户 `vibequant`(uid 10001)，装 `requirements.txt`，拷入 `M2DivGold/` 和 `VibeQuantFront/`，预建可写目录 |
-| `compose.yaml` | 定义 3 个服务与 2 个命名卷；`x-app` 锚点统一 build/image/init 设置 |
-| `requirements.txt` | 依赖：pandas、numpy |
+| `compose.yaml` | 定义 4 个服务与 4 个命名卷；`x-app` 锚点统一 build/image/init 设置 |
+| `requirements.txt` | 共用依赖：pandas、numpy，以及 LiveMoreAmazing/requirements.txt 和官方 SDK wheel |
 | `.env.example` | 远端 `docker/.env` 的模板（`FRED_API_KEY` / `FRONT_BIND` / `FRONT_PORT`） |
 | `.env.remote` | Mac 侧 SSH 四要素（host / port / project dir / compose project），由 `_common.sh` 读取 |
 | `.remoteignore` | 同步排除：`.git/`、`**/data/`、`**/results/`、`.env*`、密钥证书、缓存等 |
@@ -54,7 +54,7 @@ docker/
 | 脚本 | 做了什么 |
 |---|---|
 | `_common.sh` | 被 source 的公共库：加载 `.env.remote`，校验 host/port/路径格式，定义 `remote_exec`、`remote_shell_quote`；缺配置直接退出 |
-| `sync.sh` | `rsync --archive` 仓库到 `$REMOTE_PROJECT_DIR`，按 `.remoteignore` 排除，**不做远端删除** |
+| `sync.sh` | `rsync --archive` 仓库到 `$REMOTE_PROJECT_DIR`，按 `.remoteignore` 排除，**仅清理三个已废弃的 AmazingData 入口文件** |
 | `compose.sh` | `ssh … 'cd <远端docker> && docker compose --project-name vibequant <你的参数>'` |
 | `bootstrap.sh` | `sync.sh` + `compose.sh build` → 产出/更新 `vibequant:dev` |
 | `debug-shell.sh` | `sync.sh` + `compose.sh run --rm dev-shell bash`（bind 挂载远端源码，改完 `sync.sh` 即生效） |
@@ -80,6 +80,8 @@ docker/
 4. 远端 `docker/.env` 已按需填好（见下）。
 
 ## 首次部署
+
+构建前需先放入官方 wheel，详见下方 LiveMore 说明。
 
 ```bash
 cd /Users/lxy/VibeQuant/docker/scripts/remote
@@ -262,6 +264,25 @@ cd /Users/lxy/VibeQuant/docker/scripts/remote
 - **cron 按宿主机本地时间触发**。如果宿主机时区不是 Asia/Shanghai，8 点会落在别的时刻——先 `timedatectl` 核对。
 - 改时间：`ssh` 到宿主机 `crontab -e` 改 `0 8` 那两位；卸载：`crontab -e` 删掉那行。
 
+## 构建排障
+
+**构建卡在 pip install、几小时不动**：几乎一定是网络，不是依赖。国际链路访问 `pypi.org` 极慢甚至挂死，pip 在 DNS/连接卡住时不会自己超时。
+
+Dockerfile 默认已把 pip 指向**清华 TUNA 镜像** + 显式 `--timeout 30 --retries 3`，正常应在几分钟内完成。要换源（例如换阿里云），在远端 `docker/.env` 加：
+
+```dotenv
+PIP_INDEX_URL=https://mirrors.aliyun.com/pypi/simple/
+PIP_TRUSTED_HOST=mirrors.aliyun.com
+```
+
+其它常见情况：
+
+- 卡在下载某个大包（`pyarrow` 约 41 MB、`numpy`、`pandas`，合计约 72 MB）→ 换源后重跑；`--mount=type=cache` 的 pip 缓存会保留已下完的包，**下次构建直接复用、不再重新下载**。
+- **`import AmazingData` 报 `libcrypto.so.10 / libssl.so.10 / libtgw_python312 … cannot open shared object file`**：`tgw` 是 Linux 原生 SDK，把一整套依赖（OpenSSL 1.0.2 的 `libcrypto.so.10`/`libssl.so.10`、`libssh.so.4`、`libtgw.so`、`libadk.so` 等）打包在 `site-packages/tgw/common_linux_lib64/` 里。Dockerfile 调用 `docker/scripts/configure_tgw.py`，从已安装 wheel 动态定位库目录，再把该目录写进 `/etc/ld.so.conf.d/tgw.conf` 并 `ldconfig`，让这些 `.so` 按 SONAME 可解析；同时补装 `libgssapi-krb5-2`+`libkrb5-3`（`libtgw_python312` 还链了 Kerberos）。导入前对当前 Python 使用的 tgw 扩展执行 `ldd`，检查其传递依赖，不检查其他 Python 版本的备用扩展。若仍报缺库，先区分 wheel 自带库的搜索路径和真正缺失的系统库；安装 Python 包与动态库配置已分层缓存，修正库配置无需重复安装 Python 依赖。
+  - **注意**：这套 SDK 捆绑的是 OpenSSL **1.0.2**（2019 年已 EOL）。它只在该 SDK 内部用（SONAME 与系统的 OpenSSL 3.x 不同，不会冲突），但如果这个库要连外网/不可信端点，需自行评估这层老旧加密栈的风险。
+- 怀疑缓存坏了 → 远端执行 `docker builder prune` 后重跑。**注意：这会丢掉 pip 下载缓存，下次构建要重新下 72 MB。**
+- 千万别用 `docker compose down -v`：会删掉 `vibequant-data` / `vibequant-web` 等数据卷。
+
 ## 常用手工命令
 
 ```bash
@@ -277,3 +298,20 @@ cd /Users/lxy/VibeQuant/docker/scripts/remote
 - 密钥只放远端 `docker/.env`：不同步、不进镜像、不提交。
 - 只有 `front` 会发布宿主机端口，且绑定地址由 `FRONT_BIND` 决定——**建议填 `127.0.0.1`**，只让宿主机上的 frpc 连得到；`0.0.0.0` 会连公网网卡一起监听，是否可达取决于云安全组。其余服务（`m2divgold` / `dev-shell`）不发布任何端口。
 - `.env.remote` 只含 SSH/部署元数据，权限 `600`。
+
+## LiveMore 的 AmazingData 副本（共用 M2 镜像）
+
+`LiveMoreAmazing/` 已合并到现有 `Dockerfile`、`compose.yaml`，所有服务共用 `vibequant:dev`。新增 `livemore-amazing` 服务（profile: amazing，显式 run 时自动启用），使用独立缓存/结果卷；账号配置只传入此服务。
+
+构建前把匹配 Python 3.12 / Linux x86_64 的官方 AmazingData/tgw wheel 放入 `docker/wheels/amazing/`。统一镜像现在要求这些安装包齐全，缺少时构建失败；现有运行容器不会因构建失败被停止。
+
+```bash
+cd docker/scripts/remote
+./sync.sh
+./compose.sh build m2divgold
+./compose.sh run --rm livemore-amazing python login_test.py
+```
+
+原 `Dockerfile.amazing`、`compose.amazing.yaml`、`compose.amazing-login.yaml` 已删除。sync.sh 会精确清理远端这三个遗留文件，不删除其他远端文件、账号或数据卷。无需再使用 `-f` 参数。
+
+完整步骤见 [LiveMoreAmazing/README.md](../LiveMoreAmazing/README.md)。

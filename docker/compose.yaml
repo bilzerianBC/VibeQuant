@@ -1,4 +1,4 @@
-# VibeQuant 运行编排（M2DivGold + 前端门户）
+# VibeQuant 共用镜像编排（M2DivGold + LiveMoreAmazing + 前端门户）
 # 构建上下文 = 仓库根目录（本文件位于 docker/，context: .. 即 /Users/lxy/VibeQuant 或远端 /home/lxy/VibeQuant）
 
 x-app: &app
@@ -7,10 +7,29 @@ x-app: &app
     dockerfile: docker/Dockerfile
     args:
       PYTHON_IMAGE: ${PYTHON_IMAGE:-python:3.12-slim@sha256:7a8b475003c4fe15a2cd4e55e5cfc2f3560bdc9333d624f24cdd6d4340fd7a17}
+      # pip 源。默认清华 TUNA，避免国际链路慢/卡死；可在远端 docker/.env 覆盖。
+      PIP_INDEX_URL: ${PIP_INDEX_URL:-https://pypi.tuna.tsinghua.edu.cn/simple}
+      PIP_TRUSTED_HOST: ${PIP_TRUSTED_HOST:-pypi.tuna.tsinghua.edu.cn}
   image: ${VIBEQUANT_IMAGE:-vibequant:dev}
   init: true
 
 services:
+  livemore-amazing:
+    <<: *app
+    profiles: ["amazing"]
+    working_dir: /workspace/LiveMoreAmazing
+    env_file:
+      - path: .env.amazing
+        required: false
+    environment:
+      TZ: Asia/Shanghai
+      LIVEMORE_CACHE_DIR: /workspace/LiveMoreAmazing/.cache
+      LIVEMORE_RESULT_DIR: /workspace/LiveMoreAmazing/results
+    volumes:
+      - livemore-amazing-cache:/workspace/LiveMoreAmazing/.cache
+      - livemore-amazing-results:/workspace/LiveMoreAmazing/results
+    command: ["python", "login_test.py"]
+
   m2divgold:
     <<: *app
     working_dir: /workspace/M2DivGold
@@ -47,5 +66,7 @@ services:
         target: /workspace
 
 volumes:
+  livemore-amazing-cache:
+  livemore-amazing-results:
   vibequant-data:
   vibequant-web:

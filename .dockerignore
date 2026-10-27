@@ -20,3 +20,4 @@ node_modules
 tmp
 .env
 .env.remote
+**/.env.amazing
