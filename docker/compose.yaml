@@ -1,0 +1,51 @@
+# VibeQuant 运行编排（M2DivGold + 前端门户）
+# 构建上下文 = 仓库根目录（本文件位于 docker/，context: .. 即 /Users/lxy/VibeQuant 或远端 /home/lxy/VibeQuant）
+
+x-app: &app
+  build:
+    context: ..
+    dockerfile: docker/Dockerfile
+    args:
+      PYTHON_IMAGE: ${PYTHON_IMAGE:-python:3.12-slim@sha256:7a8b475003c4fe15a2cd4e55e5cfc2f3560bdc9333d624f24cdd6d4340fd7a17}
+  image: ${VIBEQUANT_IMAGE:-vibequant:dev}
+  init: true
+
+services:
+  m2divgold:
+    <<: *app
+    working_dir: /workspace/M2DivGold
+    command: ["python", "fetch_m2_gold.py"]
+    environment:
+      FRED_API_KEY: ${FRED_API_KEY:-}
+      # 图表脚本把 HTML 写进这个站点根（供 front 服务对外提供）
+      VIBEQUANT_SITE_DIR: /srv/web
+    volumes:
+      - vibequant-data:/workspace/M2DivGold/data
+      - vibequant-web:/srv/web
+
+  # 前端门户：常驻静态服务，把站点卷 /srv/web 提供出去
+  # 根路径自动显示 VibeQuantFront/index.html，各项目产物挂在子目录（如 /m2divgold/）
+  # 链路: 浏览器 -> 公网机 nginx -> frps:8080 -> FRP 隧道 -> 宿主机 :PORT -> 本服务
+  front:
+    <<: *app
+    command: ["python", "-m", "http.server", "8000", "-d", "/srv/web"]
+    restart: unless-stopped
+    ports:
+      # 默认只绑回环：由宿主机上的 frpc 把 127.0.0.1:8000 推到公网机，
+      # 端口因此不上局域网、不上公网。确实需要局域网直连时才改成内网 IP。
+      - "${FRONT_BIND:-127.0.0.1}:${FRONT_PORT:-8000}:8000"
+    volumes:
+      - vibequant-web:/srv/web
+
+  dev-shell:
+    <<: *app
+    profiles: ["dev"]
+    command: ["sleep", "infinity"]
+    volumes:
+      - type: bind
+        source: ..
+        target: /workspace
+
+volumes:
+  vibequant-data:
+  vibequant-web:

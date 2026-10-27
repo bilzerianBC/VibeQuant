@@ -1,0 +1,22 @@
+# 注意: Docker 只读取「构建上下文根目录」的 .dockerignore。
+# 本 compose 的构建上下文是仓库根（docker/compose.yaml 里 context: ..），
+# 所以这份 .dockerignore 必须放在仓库根，而非 docker/ 目录内。
+.git
+.gitignore
+.DS_Store
+.claude
+.codex
+.agents
+.venv
+node_modules
+**/__pycache__
+**/*.py[cod]
+**/.pytest_cache
+**/.cache
+**/results
+**/data
+**/work
+*.zip
+tmp
+.env
+.env.remote

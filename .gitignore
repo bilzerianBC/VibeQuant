@@ -1,0 +1,41 @@
+# ---- 凭据 / 密钥（模板 .example 保留，真实值一律不提交）----
+.env
+.env.*
+!.env.example
+!.env.remote.example
+secrets/
+*.pem
+*.key
+*.crt
+
+# ---- Python ----
+__pycache__/
+**/__pycache__/
+*.py[cod]
+.pytest_cache/
+.cache/
+.venv/
+
+# ---- 数据与产物（都可重新抓取 / 重新生成）----
+*.csv
+**/data/
+**/results/
+**/work/
+docker/out/
+*.tar
+ratio_m2_gold*.html
+ratio_m2_gold*.png
+*.zip
+
+# ---- 不提交的项目目录（本地保留，但不进仓库）----
+LiveMore/
+datasrc/
+
+# ---- 系统 / 临时 / 调试残留 ----
+.DS_Store
+tmp/
+.claude/
+.codex/
+.agents/
+TEMP_LIVEMORE_TEST.md
+tmp-test-livemore-docker.sh

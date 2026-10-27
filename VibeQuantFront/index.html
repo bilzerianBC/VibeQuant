@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VibeQuant 产出索引</title>
+<style>
+  :root {
+    color-scheme: light;
+    --paper: #fbfbf9;
+    --ink: #16181d;
+    --muted: #6b6f76;
+    --faint: #9b9fa6;
+    --rule: #e4e4de;
+    --accent: #2f5d8c;
+    --gold: #a97c22;
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Songti SC", Georgia, serif;
+    --sans: -apple-system, "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    padding: 64px 32px 96px;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page { max-width: 46rem; margin: 0 auto; }
+
+  /* ---- 页头 ---- */
+  .masthead { border-bottom: 2px solid var(--ink); padding-bottom: 18px; }
+  .masthead h1 {
+    font-family: var(--serif);
+    font-size: clamp(2.1rem, 6vw, 2.9rem);
+    font-weight: 500;
+    letter-spacing: -0.015em;
+    line-height: 1.05;
+    margin: 0;
+  }
+  .masthead p {
+    margin: 6px 0 0;
+    color: var(--muted);
+    font-size: 0.94rem;
+  }
+
+  /* ---- 项目 ---- */
+  .project { padding: 34px 0 30px; border-bottom: 1px solid var(--rule); }
+  .project:last-of-type { border-bottom: none; }
+
+  .project h2 {
+    font-family: var(--serif);
+    font-size: 1.5rem;
+    font-weight: 500;
+    letter-spacing: -0.005em;
+    margin: 0 0 4px;
+  }
+  .project .summary {
+    margin: 0 0 18px;
+    color: var(--muted);
+    font-size: 0.94rem;
+    max-width: 34rem;
+  }
+
+  /* ---- 产物列表 ---- */
+  .artifacts { list-style: none; margin: 0; padding: 0; }
+  .artifacts li {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    padding: 7px 0;
+    border-top: 1px solid var(--rule);
+  }
+  .artifacts li:first-child { border-top: none; }
+
+  .mark {
+    flex: none;
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--gold);
+    transform: translateY(-2px);
+  }
+  .mark.none { background: transparent; box-shadow: inset 0 0 0 1.5px var(--rule); }
+
+  .artifacts a {
+    font-family: var(--mono);
+    font-size: 0.9rem;
+    color: var(--accent);
+    text-decoration: none;
+    text-underline-offset: 3px;
+  }
+  .artifacts a:hover,
+  .artifacts a:focus-visible { text-decoration: underline; }
+
+  .artifacts .label { font-size: 0.9rem; color: var(--muted); }
+  .artifacts .name { font-family: var(--mono); font-size: 0.9rem; color: var(--faint); }
+
+  .empty { color: var(--faint); font-size: 0.9rem; padding: 7px 0; }
+
+  /* ---- 页脚 ---- */
+  .colophon {
+    margin-top: 40px;
+    padding-top: 18px;
+    border-top: 1px solid var(--rule);
+    color: var(--faint);
+    font-size: 0.82rem;
+    line-height: 1.65;
+  }
+  .colophon code {
+    font-family: var(--mono);
+    font-size: 0.95em;
+    color: var(--muted);
+  }
+
+  /* ---- 可达性 ---- */
+  a:focus-visible,
+  [tabindex]:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+  @media (max-width: 480px) {
+    body { padding: 40px 20px 64px; }
+    .artifacts li { flex-wrap: wrap; gap: 4px 10px; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="masthead">
+    <h1>VibeQuant</h1>
+    <p>各项目在容器里跑出来的结果，都从这里进。</p>
+  </header>
+
+  <main>
+
+    <article class="project">
+      <h2>M2DivGold</h2>
+      <p class="summary">
+        美国 M2 与黄金的长期数据，看货币扩张相对黄金购买力走了多远。
+        金价取自 LBMA 伦敦金定盘价，M2 取自美联储官方序列。
+      </p>
+      <ul class="artifacts">
+        <li>
+          <span class="mark" aria-hidden="true"></span>
+          <a href="m2divgold/ratio_m2_gold_daily.html">ratio_m2_gold_daily.html</a>
+          <span class="label">日度比值图，默认最近一年，可拖动、缩放、悬停看当日数值</span>
+        </li>
+      </ul>
+    </article>
+
+  </main>
+
+  <p class="colophon">
+    页面上没有的产物，说明对应项目还没跑过，或者结果还没生成进站点目录。
+    更新数据后重跑对应项目的脚本，刷新本页即可。
+  </p>
+
+</div>
+</body>
+</html>
