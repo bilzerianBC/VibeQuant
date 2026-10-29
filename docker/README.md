@@ -13,28 +13,29 @@
 docker/
 ├── README.md                 本文件
 ├── Dockerfile                统一镜像定义（构建上下文 = 仓库根）
-├── compose.yaml              服务编排：m2divgold / front / dev-shell + 两个命名卷
+├── Dockerfile.mihomo         DipWatch 代理镜像（复用共享镜像离线构建，不下载第三方镜像）
+├── compose.yaml              服务编排：m2divgold / front / livemore-amazing / usstock-dip-watch / mihomo / dev-shell
 ├── requirements.txt          Python 依赖（pandas + numpy）
-├── .env.example              远端应用密钥模板（会同步到远端，远端复制成 .env）
-├── .env.remote.example       Mac 侧 SSH 元数据模板
-├── .env.remote               Mac 侧 SSH 元数据（真实值，仅本机，不同步不提交）
+├── .env*.example             各类配置模板（真实 .env / .env.remote / .env.amazing / .env.dipwatch / .env.web 不提交、不同步）
 ├── .remoteignore             rsync 同步排除规则（Mac → 远端）
-├── .dockerignore             占位说明，真正生效的是仓库根的 /.dockerignore
+├── mihomo/                   Mihomo 代理：说明、配置模板（真实 config.yaml 与 runtime/ 不提交）
+├── wheels/amazing/           官方 AmazingData / tgw Linux wheel（不提交，但会同步）
+├── out/                      pull-data.sh 等拉回 Mac 的数据/结果（不提交）
 └── scripts/
-    ├── host/
-    │   └── daily-update.sh   宿主机上的每日更新（拉数据 + 出图），由 cron 调用
+    ├── configure_tgw.py      镜像构建时注册 tgw 原生库路径（ldconfig）
+    ├── host/                 **在远端宿主机上**由 cron 调用
+    │   ├── daily-update.sh       每日 08:00：拉 M2/金价 + 出图
+    │   └── dipwatch-update.sh    每半小时：DipWatch 行情采集
     └── remote/               部署脚本（**全部在 Mac 上执行**）
-        ├── _common.sh        所有脚本的公共前置：读 .env.remote、校验、ssh 封装
-        ├── sync.sh           把仓库 rsync 到远端
-        ├── compose.sh        把 docker compose 命令透传到远端
-        ├── bootstrap.sh      sync + 构建镜像
-        ├── debug-shell.sh    sync + 起交互 shell（远端源码 bind 挂载）
-        ├── run-m2divgold.sh  sync + 跑 M2/黄金抓取
-        ├── install-schedule.sh  sync + 装宿主机 cron 定时任务
-        └── pull-data.sh      把远端数据卷拉回 Mac 的 docker/out/
+        ├── _common.sh            所有脚本的公共前置：读 .env.remote、校验、ssh 封装
+        ├── sync.sh / compose.sh  同步源码 / 透传 docker compose 命令
+        ├── bootstrap.sh / debug-shell.sh
+        ├── run-m2divgold.sh / pull-data.sh / install-schedule.sh          M2DivGold
+        └── deploy-dipwatch-web.sh / install-dipwatch-schedule.sh /
+            prepare-dipwatch-proxy.sh / prepare-web-completions.sh         USStockDipWatch
 ```
 
-`docker/out/` 是 `pull-data.sh` 的落地目录（`.tar`，不进版本库）。仓库根还有一个**生效的** `.dockerignore`——Docker 只读构建上下文根目录的那一份，不在本目录。
+Docker 只读取构建上下文根目录的 `.dockerignore`，所以真正生效的排除规则在**仓库根**的 `/.dockerignore`（本目录不放 `.dockerignore`）。
 
 ### 各文件作用
 
@@ -46,7 +47,6 @@ docker/
 | `.env.example` | 远端 `docker/.env` 的模板（`FRED_API_KEY` / `FRONT_BIND` / `FRONT_PORT`） |
 | `.env.remote` | Mac 侧 SSH 四要素（host / port / project dir / compose project），由 `_common.sh` 读取 |
 | `.remoteignore` | 同步排除：`.git/`、`**/data/`、`**/results/`、`.env*`、密钥证书、缓存等 |
-| `.dockerignore` | 仅说明用途；实际规则在仓库根 `/.dockerignore` |
 | `scripts/remote/*.sh` | 见下表，全部是 Mac 端薄封装：`sync.sh` → `compose.sh <命令>` |
 
 ### 部署脚本
@@ -309,7 +309,7 @@ PIP_TRUSTED_HOST=mirrors.aliyun.com
 cd docker/scripts/remote
 ./sync.sh
 ./compose.sh build m2divgold
-./compose.sh run --rm livemore-amazing python login_test.py
+./compose.sh run --rm livemore-amazing python -c 'import AmazingData, tgw; print("SDK imports OK")'
 ```
 
 原 `Dockerfile.amazing`、`compose.amazing.yaml`、`compose.amazing-login.yaml` 已删除。sync.sh 会精确清理远端这三个遗留文件，不删除其他远端文件、账号或数据卷。无需再使用 `-f` 参数。

@@ -1,3 +1,0 @@
-# 此文件不生效，仅作说明。
-# Docker 只读取构建上下文根目录的 .dockerignore；本 compose 的上下文是仓库根，
-# 所以真正的排除规则在 /Users/lxy/VibeQuant/.dockerignore（远端为 /home/lxy/VibeQuant/.dockerignore）。

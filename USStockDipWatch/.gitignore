@@ -1,0 +1,21 @@
+# ---- 本地运行产物 / 凭据 ----
+.env*
+/outputs/
+/work/
+__pycache__/
+*.pyc
+.DS_Store
+*.pem
+
+# ---- 本地 AI 工具状态 ----
+/.agents/
+/.codex/
+
+# ---- legacy/cloudflare-worker：已退役的 JS 原型（构建产物与本机状态）----
+node_modules/
+legacy/cloudflare-worker/dist/
+legacy/cloudflare-worker/src/page.mjs
+legacy/cloudflare-worker/.sites-runtime/
+legacy/cloudflare-worker/.wrangler/
+.local-state.json
+npm-debug.log*

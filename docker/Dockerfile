@@ -66,9 +66,12 @@ RUN python /tmp/configure_tgw.py \
 # 应用源码
 COPY --chown=vibequant:vibequant M2DivGold /workspace/M2DivGold
 COPY --chown=vibequant:vibequant LiveMoreAmazing /workspace/LiveMoreAmazing
+COPY --chown=vibequant:vibequant USStockDipWatch /workspace/USStockDipWatch
 
 # 前端门户：站点根，首次挂载空的命名卷时会被这份内容初始化（index.html）
 COPY --chown=vibequant:vibequant VibeQuantFront /srv/web
+# Keep a fresh template outside the persistent site volume.
+COPY --chown=vibequant:vibequant VibeQuantFront /opt/vibequant-front
 
 # 预建运行期可写目录并归 vibequant 所有，命名卷挂载时会继承该属主，避免权限问题
 RUN mkdir -p \

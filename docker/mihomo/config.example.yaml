@@ -1,0 +1,28 @@
+# Copy to config.yaml; real node credentials must never be committed/synchronized.
+mixed-port: 7890
+allow-lan: true
+bind-address: "*"
+mode: rule
+log-level: warning
+ipv6: false
+geo-auto-update: false
+
+# Replace [] with your provider's Clash/Mihomo node list, e.g.:
+# proxies:
+#   - name: my-node
+#     type: ss
+#     server: YOUR_SERVER
+#     port: 12345
+#     cipher: chacha20-ietf-poly1305
+#     password: YOUR_PASSWORD
+proxies: []
+
+proxy-groups:
+  - name: ALPACA-PROXY
+    type: select
+    # Replace REJECT with the exact name of your configured node.
+    # Until configured, fail explicitly rather than falling back to direct access.
+    proxies: [REJECT]
+
+rules:
+  - MATCH,ALPACA-PROXY

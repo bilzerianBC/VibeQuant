@@ -1,0 +1,10 @@
+# Offline build: reuse the existing shared image; never download a proxy image.
+ARG MIHOMO_BASE_IMAGE=vibequant:dev
+FROM ${MIHOMO_BASE_IMAGE}
+USER root
+COPY mihomo-linux-amd64-compatible-v1.19.31.gz /tmp/mihomo.gz
+RUN python -c "import gzip,hashlib,pathlib; p=pathlib.Path('/tmp/mihomo.gz'); assert hashlib.sha256(p.read_bytes()).hexdigest() == '04cf9f09671704f839ddbee2e93069dc831a4123a75281e725d1d96ab9ac1afc', 'Mihomo archive SHA256 mismatch'; out=pathlib.Path('/usr/local/bin/mihomo'); out.write_bytes(gzip.decompress(p.read_bytes())); out.chmod(0o755)" \
+    && /usr/local/bin/mihomo -v
+WORKDIR /root/.config/mihomo
+ENTRYPOINT ["/usr/local/bin/mihomo"]
+CMD ["-d", "/root/.config/mihomo", "-f", "/etc/mihomo/config.yaml"]

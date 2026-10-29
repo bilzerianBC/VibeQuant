@@ -18,8 +18,17 @@ tmp/
 .env
 .env.remote
 .env.amazing
+.env.dipwatch
+.env.web
 secrets/
+/docker/mihomo/config.yaml
+/docker/mihomo/runtime/
 ttt.txt
+local/
 *.pem
 *.key
 *.crt
+USStockDipWatch/legacy/cloudflare-worker/.openai/
+USStockDipWatch/legacy/cloudflare-worker/.sites-runtime/
+USStockDipWatch/legacy/cloudflare-worker/dist/
+**/.local-state.json

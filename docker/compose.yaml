@@ -14,6 +14,47 @@ x-app: &app
   init: true
 
 services:
+  mihomo:
+    image: vibequant-mihomo:1.19.31
+    pull_policy: never
+    build:
+      context: ./mihomo
+      dockerfile: ../Dockerfile.mihomo
+      args:
+        MIHOMO_BASE_IMAGE: ${VIBEQUANT_IMAGE:-vibequant:dev}
+    profiles: ["dipwatch"]
+    restart: unless-stopped
+    command: ["-d", "/root/.config/mihomo", "-f", "/etc/mihomo/config.yaml"]
+    volumes:
+      - type: bind
+        source: ./mihomo/config.yaml
+        target: /etc/mihomo/config.yaml
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ./mihomo/runtime
+        target: /root/.config/mihomo
+        bind:
+          create_host_path: false
+    networks: [dipwatch-proxy]
+    # No host ports, host networking, TUN or privileged permissions.
+
+  usstock-dip-watch:
+    <<: *app
+    profiles: ["dipwatch"]
+    working_dir: /workspace/USStockDipWatch
+    command: ["python", "collect.py"]
+    env_file:
+      - path: .env.dipwatch
+        required: false
+    networks: [dipwatch-proxy]
+    environment:
+      TZ: Asia/Shanghai
+      VIBEQUANT_SITE_DIR: /srv/web
+    volumes:
+      - vibequant-web:/srv/web
+
   livemore-amazing:
     <<: *app
     profiles: ["amazing"]
@@ -25,10 +66,12 @@ services:
       TZ: Asia/Shanghai
       LIVEMORE_CACHE_DIR: /workspace/LiveMoreAmazing/.cache
       LIVEMORE_RESULT_DIR: /workspace/LiveMoreAmazing/results
+      VIBEQUANT_SITE_DIR: /srv/web
     volumes:
       - livemore-amazing-cache:/workspace/LiveMoreAmazing/.cache
       - livemore-amazing-results:/workspace/LiveMoreAmazing/results
-    command: ["python", "login_test.py"]
+      - vibequant-web:/srv/web
+    command: ["python", "run_backtest.py", "--help"]
 
   m2divgold:
     <<: *app
@@ -47,7 +90,10 @@ services:
   # 链路: 浏览器 -> 公网机 nginx -> frps:8080 -> FRP 隧道 -> 宿主机 :PORT -> 本服务
   front:
     <<: *app
-    command: ["python", "-m", "http.server", "8000", "-d", "/srv/web"]
+    command: ["python", "/workspace/USStockDipWatch/site_server.py"]
+    env_file:
+      - path: .env.web
+        required: false
     restart: unless-stopped
     ports:
       # 默认只绑回环：由宿主机上的 frpc 把 127.0.0.1:8000 推到公网机，
@@ -64,6 +110,9 @@ services:
       - type: bind
         source: ..
         target: /workspace
+
+networks:
+  dipwatch-proxy:
 
 volumes:
   livemore-amazing-cache:

@@ -8,7 +8,7 @@ source "${SCRIPT_DIR}/_common.sh"
 remote_dir_quoted="$(remote_shell_quote "${REMOTE_PROJECT_DIR}")"
 remote_exec "mkdir -p -- ${remote_dir_quoted}"
 
-RSYNC_SSH="ssh -p ${REMOTE_SSH_PORT} -o BatchMode=yes -o ConnectTimeout=15 -o StrictHostKeyChecking=accept-new"
+RSYNC_SSH="ssh -p ${REMOTE_SSH_PORT} -o BatchMode=yes -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=6 -o StrictHostKeyChecking=accept-new"
 
 rsync \
   --archive \
