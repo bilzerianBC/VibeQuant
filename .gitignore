@@ -4,8 +4,14 @@
 !.env.example
 !.env.remote.example
 !.env.amazing.example
+!.env.dipwatch.example
+!.env.web.example
 *.whl
 secrets/
+docker/mihomo/*
+!docker/mihomo/config.example.yaml
+!docker/mihomo/README.md
+!docker/mihomo/.dockerignore
 *.pem
 *.key
 *.crt
@@ -30,8 +36,10 @@ ratio_m2_gold*.png
 *.zip
 
 # ---- 不提交的项目目录（本地保留，但不进仓库）----
-LiveMore/
-datasrc/
+# 开头的 / 只匹配仓库根目录；macOS 上 git 不区分大小写，
+# 不加 / 会把 LiveMoreAmazing/livemore/ 也一起忽略掉。
+/LiveMore/
+/datasrc/
 
 # ---- 系统 / 临时 / 调试残留 ----
 .DS_Store
@@ -39,5 +47,5 @@ tmp/
 .claude/
 .codex/
 .agents/
-TEMP_LIVEMORE_TEST.md
-tmp-test-livemore-docker.sh
+# 个人笔记 / 本机私有文件（不属于项目，不提交、不同步）
+local/

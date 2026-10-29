@@ -21,3 +21,39 @@ tmp
 .env
 .env.remote
 **/.env.amazing
+**/.env.dipwatch
+**/.env.web
+docker/mihomo
+# 不进镜像：个人文件、本机工具、DipWatch 已退役的 JS 原型
+local
+tools
+USStockDipWatch/legacy
+**/.local-state.json
+# 远端同步不删除文件（sync.sh 无 --delete），旧路径会残留在服务器上。
+# 下面列出已迁走的旧路径，避免它们被打进镜像。
+# - 已退役的 Mac 自动化脚本
+USStockDipWatch/scripts
+# - 2026-10 目录整理前的旧位置（新位置见各项目 README）
+USStockDipWatch/src
+USStockDipWatch/tests/*.mjs
+USStockDipWatch/dist
+USStockDipWatch/package.json
+USStockDipWatch/TROUBLESHOOTING.md
+USStockDipWatch/.openai
+USStockDipWatch/.sites-runtime
+LiveMoreAmazing/amazing_data.py
+LiveMoreAmazing/livermore_strategy.py
+LiveMoreAmazing/trading_statistics.py
+LiveMoreAmazing/analyze2.py
+LiveMoreAmazing/colstat.py
+LiveMoreAmazing/diagnose_market.py
+LiveMoreAmazing/gen_chart.py
+LiveMoreAmazing/probe.py
+LiveMoreAmazing/publish_report.py
+LiveMoreAmazing/visualize.py
+LiveMoreAmazing/test_query_kline_permission.py
+LiveMoreAmazing/API_TESTING.md
+LiveMoreAmazing/doc
+LiveMoreAmazing/tests
+LiveMoreAmazing/scripts
+LiveMoreAmazing/docs/API_TESTING.md
